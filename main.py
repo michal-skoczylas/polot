@@ -1,7 +1,7 @@
 import sys
 from pathlib import Path
 import os
-from PySide6.QtGui import QGuiApplication, QImage, QPainter, QKeyEvent
+from PySide6.QtGui import QGuiApplication, QImage, QPainter
 from PySide6.QtQml import QQmlApplicationEngine
 from PySide6.QtCore import Qt, QRect, QUrl, QObject, Slot
 from datetime import datetime
@@ -40,16 +40,12 @@ class ScreenshotHandler(QObject):
         # Save the screenshot as a PNG
         screenshot.save(save_path, "PNG")
         print(f"Screenshot saved to {save_path}")
-class CustomQuickWindow(QQuickWindow):
-    def keyPressEvent(self,event:QKeyEvent):
-        if event.key()==Qt.Key_Escape:
-            print("Closing app")
-            QGuiApplication.quit()
+
 if __name__ == "__main__":
     app = QGuiApplication(sys.argv)  # Initialize QGuiApplication before creating any QML-based windows
 
     # Create the QQuickWindow instance after QApplication
-    window = CustomQuickWindow()
+    window = QQuickWindow()
 
     # Create ScreenshotHandler and pass the window to it
     screenshot_handler = ScreenshotHandler(window)

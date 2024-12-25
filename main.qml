@@ -29,6 +29,13 @@ Window {
             color: "transparent"
             border.color: "green"
             border.width: 2
+            focus: true
+            //Cath escape key and close window
+            Keys.onPressed:function(event){
+                if(event.key==Qt.Key_Escape){
+                    Qt.quit();
+                }
+            }
         }
 
         MouseArea {
