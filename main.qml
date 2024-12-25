@@ -81,5 +81,27 @@ Window {
                     ", height=" + selectionRect.height);
             }
         }
+        Rectangle{
+            y: 422
+            width: 80
+            height: 50
+            color: "gray"
+            anchors.bottom: parent.bottom
+            anchors.bottomMargin: 8
+            anchors.horizontalCenterOffset: 0
+            anchors.horizontalCenter: parent.horizontalCenter
+            Text{
+                anchors.centerIn: parent
+                text: "Snap"
+                font.pixelSize: 20
+            }
+            MouseArea{
+                anchors.fill: parent
+                onClicked: {
+                    // calling function to take screenshot
+                    screenshotHandler.takeScreenshot(selectionRect.x,selectionRect.y,selectionRect.width,selectionRect.height)
+                }
+            }
+        }
     }
 }
