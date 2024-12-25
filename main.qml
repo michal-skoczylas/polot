@@ -8,7 +8,7 @@ Window {
     visibility: Window.FullScreen
     flags: Qt.FramelessWindowHint
     color: "transparent"
-    title: qsTr("Hello World")
+    title: qsTr("Polot App")
 
     // Variables for offsetting rectangle
     property bool dragging: false
@@ -16,6 +16,16 @@ Window {
     property real offsetY: 0
     property real startX: 0
     property real startY: 0
+
+    // Uruchomienie okna na aktywnym ekranie
+    Component.onCompleted: {
+        var screen = Screen.active;  // Pobierz aktywny ekran
+        if (screen) {
+            // Ustaw okno na aktywnym ekranie
+            x = screen.geometry.x + (screen.geometry.width - width) / 2;
+            y = screen.geometry.y + (screen.geometry.height - height) / 2;
+        }
+    }
 
     Rectangle {
         id: canvas
@@ -30,9 +40,10 @@ Window {
             border.color: "green"
             border.width: 2
             focus: true
-            //Cath escape key and close window
-            Keys.onPressed:function(event){
-                if(event.key==Qt.Key_Escape){
+
+            // Catch escape key and close window
+            Keys.onPressed: function(event) {
+                if (event.key == Qt.Key_Escape) {
                     Qt.quit();
                 }
             }
@@ -88,7 +99,8 @@ Window {
                     ", height=" + selectionRect.height);
             }
         }
-        Rectangle{
+
+        Rectangle {
             y: 422
             width: 80
             height: 50
@@ -97,16 +109,18 @@ Window {
             anchors.bottomMargin: 8
             anchors.horizontalCenterOffset: 0
             anchors.horizontalCenter: parent.horizontalCenter
-            Text{
+
+            Text {
                 anchors.centerIn: parent
                 text: "Snap"
                 font.pixelSize: 20
             }
-            MouseArea{
+
+            MouseArea {
                 anchors.fill: parent
                 onClicked: {
-                    // calling function to take screenshot
-                    screenshotHandler.takeScreenshot(selectionRect.x,selectionRect.y,selectionRect.width,selectionRect.height)
+                    // Calling function to take screenshot
+                    screenshotHandler.takeScreenshot(selectionRect.x, selectionRect.y, selectionRect.width, selectionRect.height)
                 }
             }
         }

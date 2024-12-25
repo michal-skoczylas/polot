@@ -5,7 +5,8 @@ from PySide6.QtGui import QGuiApplication, QImage, QPainter
 from PySide6.QtQml import QQmlApplicationEngine
 from PySide6.QtCore import Qt, QRect, QUrl, QObject, Slot
 from datetime import datetime
-from PySide6.QtQuick  import QQuickWindow
+from PySide6.QtQuick import QQuickWindow
+
 class ScreenshotHandler(QObject):
     def __init__(self, window):
         super().__init__()
@@ -23,7 +24,7 @@ class ScreenshotHandler(QObject):
         rect = QRect(window_rect.left() + x, window_rect.top() + y, width, height)
 
         # Taking screenshot
-        screenshot = screen.grabWindow(self.window.winId(), rect.left()+2, rect.top()+2, rect.width()-4, rect.height()-4)
+        screenshot = screen.grabWindow(self.window.winId(), rect.left() + 2, rect.top() + 2, rect.width() - 4, rect.height() - 4)
 
         # Get the system's screenshots folder (usually ~/Pictures/Screenshots)
         screenshots_folder = os.path.expanduser("~/Pictures/Screenshots")
@@ -41,11 +42,19 @@ class ScreenshotHandler(QObject):
         screenshot.save(save_path, "PNG")
         print(f"Screenshot saved to {save_path}")
 
+
 if __name__ == "__main__":
     app = QGuiApplication(sys.argv)  # Initialize QGuiApplication before creating any QML-based windows
 
-    # Create the QQuickWindow instance after QApplication
+    # Get the active screen
+    screen = QGuiApplication.primaryScreen()
+
+    # Create the QQuickWindow instance
     window = QQuickWindow()
+
+    # Set the window's position to the active screen's center
+    screen_geometry = screen.geometry()
+    window.setGeometry(screen_geometry)
 
     # Create ScreenshotHandler and pass the window to it
     screenshot_handler = ScreenshotHandler(window)
@@ -63,3 +72,4 @@ if __name__ == "__main__":
     engine.rootContext().setContextProperty("screenshotHandler", screenshot_handler)
 
     sys.exit(app.exec())
+
