@@ -1,75 +1,108 @@
 import sys
-from pathlib import Path
 import os
-from PySide6.QtGui import QGuiApplication, QImage, QPainter
-from PySide6.QtQml import QQmlApplicationEngine
-from PySide6.QtCore import Qt, QRect, QUrl, QObject, Slot
+from pathlib import Path
 from datetime import datetime
+import glob
+import cv2 as cv
+import pytesseract
+from PIL import Image
+from PySide6.QtGui import QGuiApplication, QImage, QClipboard
+from PySide6.QtQml import QQmlApplicationEngine
+from PySide6.QtCore import Qt, QRect, QObject, Slot, QUrl
 from PySide6.QtQuick import QQuickWindow
+
 
 class ScreenshotHandler(QObject):
     def __init__(self, window):
         super().__init__()
-        self.window = window  # Store the window reference
+        self.window = window
 
     @Slot(float, float, float, float)
     def takeScreenshot(self, x, y, width, height):
-        # Setting primary screen
-        screen = QGuiApplication.primaryScreen()
+        try:
+            # Get primary screen and window geometry
+            screen = QGuiApplication.primaryScreen()
+            window_rect = self.window.geometry()
 
-        # Getting window screen rect area (geometry of the window)
-        window_rect = self.window.geometry()
+            # Define capture area
+            rect = QRect(window_rect.left() + x, window_rect.top() + y, width, height)
 
-        # Defining area to capture based on the coordinates passed from QML
-        rect = QRect(window_rect.left() + x, window_rect.top() + y, width, height)
+            # Capture screenshot
+            screenshot = screen.grabWindow(self.window.winId(), rect.left(), rect.top(), rect.width(), rect.height())
 
-        # Taking screenshot
-        screenshot = screen.grabWindow(self.window.winId(), rect.left() + 2, rect.top() + 2, rect.width() - 4, rect.height() - 4)
+            # Define save path
+            screenshots_folder = os.path.expanduser("~/Pictures/Screenshots/polot")
+            os.makedirs(screenshots_folder, exist_ok=True)
+            timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+            save_path = os.path.join(screenshots_folder, f"screenshot_{timestamp}.png")
 
-        # Get the system's screenshots folder (usually ~/Pictures/Screenshots)
-        screenshots_folder = os.path.expanduser("~/Pictures/Screenshots")
+            # Save the screenshot
+            screenshot.save(save_path, "PNG")
+            print(f"Screenshot saved to {save_path}")
 
-        # Create "polot" subfolder inside the screenshots folder if it doesn't exist
-        polot_folder = os.path.join(screenshots_folder, "polot")
-        if not os.path.exists(polot_folder):
-            os.makedirs(polot_folder)
+        except Exception as e:
+            print(f"Error while taking screenshot: {e}")
 
-        # Set save path with timestamp inside the "polot" folder
-        timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        save_path = os.path.join(polot_folder, f"screenshot_{timestamp}.png")
+    def processImage(self):
+        # Define folder path
+            screenshots_folder = os.path.expanduser("~/Pictures/Screenshots/polot")
+            list_of_files = glob.glob(os.path.join(screenshots_folder, '*.png'))
 
-        # Save the screenshot as a PNG
-        screenshot.save(save_path, "PNG")
-        print(f"Screenshot saved to {save_path}")
+            if not list_of_files:
+                print("Missing screenshot files in directory")
+                return
+
+            try:
+                # Find the latest screenshot
+                latest_img = max(list_of_files, key=os.path.getctime)
+
+                # Image processing
+                img = cv.imread(latest_img)
+                img = cv.cvtColor(img, cv.COLOR_BGR2RGB)
+
+                # Reading text from image
+                text = pytesseract.image_to_string(img)
+
+                # Pasting text to clipboard
+                clipboard = QGuiApplication.clipboard()
+                clipboard.setText(text)
+                print("Text successfully copied to clipboard.")
+            except cv.error as e:
+                print(f"OpenCV error: {e}")
+            except Exception as e:
+                print(f"An error occurred: {e}")
+
+
+
+
 
 
 if __name__ == "__main__":
-    app = QGuiApplication(sys.argv)  # Initialize QGuiApplication before creating any QML-based windows
+    app = QGuiApplication(sys.argv)
 
-    # Get the active screen
+    # Print active Python environment
+    print("Active Python environment:", sys.executable)
+
+    # Get the primary screen
     screen = QGuiApplication.primaryScreen()
-
-    # Create the QQuickWindow instance
-    window = QQuickWindow()
-
-    # Set the window's position to the active screen's center
     screen_geometry = screen.geometry()
+
+    # Create the main application window
+    window = QQuickWindow()
     window.setGeometry(screen_geometry)
 
-    # Create ScreenshotHandler and pass the window to it
+    # Set up the ScreenshotHandler
     screenshot_handler = ScreenshotHandler(window)
 
-    engine = QQmlApplicationEngine()
-
     # Load the QML file
+    engine = QQmlApplicationEngine()
+    engine.rootContext().setContextProperty("screenshotHandler", screenshot_handler)
+
     qml_file = Path(__file__).resolve().parent / "main.qml"
-    engine.load(qml_file)
+    engine.load(QUrl.fromLocalFile(str(qml_file)))
 
     if not engine.rootObjects():
         sys.exit(-1)
 
-    # Set the context property so QML can access the ScreenshotHandler
-    engine.rootContext().setContextProperty("screenshotHandler", screenshot_handler)
-
+    # Run the application
     sys.exit(app.exec())
-
