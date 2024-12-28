@@ -20,15 +20,28 @@ class ScreenshotHandler(QObject):
     @Slot(float, float, float, float)
     def takeScreenshot(self, x, y, width, height):
         try:
-            # Get primary screen and window geometry
-            screen = QGuiApplication.primaryScreen()
+            # Get all screens and choose the primary one (or you could select another)
+            screens = QGuiApplication.screens()
+            screen = screens[0]  # Choose the first screen, or use a different index if needed
+
+            # Ensure screen exists
+            if not screen:
+                print("No primary screen available")
+                return
+
+            # Get the geometry of the window
             window_rect = self.window.geometry()
 
-            # Define capture area
-            rect = QRect(window_rect.left() + x, window_rect.top() + y, width, height)
+            # Adjust coordinates to global screen space
+            rect = QRect(
+                window_rect.x() + int(x),  # Global X
+                window_rect.y() + int(y),  # Global Y
+                int(width),               # Width
+                int(height)               # Height
+            )
 
-            # Capture screenshot
-            screenshot = screen.grabWindow(self.window.winId(), rect.left(), rect.top(), rect.width(), rect.height())
+            # Capture the screenshot
+            screenshot = screen.grabWindow(0, rect.x(), rect.y(), rect.width(), rect.height())
 
             # Define save path
             screenshots_folder = os.path.expanduser("~/Pictures/Screenshots/polot")
@@ -37,12 +50,16 @@ class ScreenshotHandler(QObject):
             save_path = os.path.join(screenshots_folder, f"screenshot_{timestamp}.png")
 
             # Save the screenshot
-            screenshot.save(save_path, "PNG")
-            print(f"Screenshot saved to {save_path}")
+            if screenshot.save(save_path, "PNG"):
+                print(f"Screenshot saved to {save_path}")
+            else:
+                print("Failed to save screenshot")
 
         except Exception as e:
             print(f"Error while taking screenshot: {e}")
 
+
+    @Slot()
     def processImage(self):
         # Define folder path
             screenshots_folder = os.path.expanduser("~/Pictures/Screenshots/polot")

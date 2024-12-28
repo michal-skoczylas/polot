@@ -10,18 +10,15 @@ Window {
     color: "transparent"
     title: qsTr("Polot App")
 
-    // Variables for offsetting rectangle
     property bool dragging: false
     property real offsetX : 0
     property real offsetY: 0
     property real startX: 0
     property real startY: 0
 
-    // Uruchomienie okna na aktywnym ekranie
     Component.onCompleted: {
-        var screen = Screen.active;  // Pobierz aktywny ekran
+        var screen = Screen.active;
         if (screen) {
-            // Ustaw okno na aktywnym ekranie
             x = screen.geometry.x + (screen.geometry.width - width) / 2;
             y = screen.geometry.y + (screen.geometry.height - height) / 2;
         }
@@ -32,7 +29,6 @@ Window {
         color: "transparent"
         anchors.fill: parent
 
-        // Rectangle drawn by user
         Rectangle {
             id: selectionRect
             visible: false
@@ -41,7 +37,6 @@ Window {
             border.width: 2
             focus: true
 
-            // Catch escape key and close window
             Keys.onPressed: function(event) {
                 if (event.key == Qt.Key_Escape) {
                     Qt.quit();
@@ -52,18 +47,14 @@ Window {
         MouseArea {
             id: selectionArea
             anchors.fill: parent
-            cursorShape: Qt.CrossCursor
 
             onPressed: function(event) {
-                // Check if the click is inside the rectangle
                 if (event.x >= selectionRect.x && event.x <= selectionRect.x + selectionRect.width &&
                     event.y >= selectionRect.y && event.y <= selectionRect.y + selectionRect.height) {
-                    // Start dragging: store the offset between the mouse position and the rectangle's position
                     dragging = true;
                     offsetX = event.x - selectionRect.x;
                     offsetY = event.y - selectionRect.y;
                 } else {
-                    // If the click is outside the rectangle, start drawing a new one
                     dragging = false;
                     startX = event.x;
                     startY = event.y;
@@ -77,22 +68,17 @@ Window {
 
             onPositionChanged: function(event) {
                 if (dragging) {
-                    // If dragging, move the rectangle according to the mouse position
                     selectionRect.x = event.x - offsetX;
                     selectionRect.y = event.y - offsetY;
                 } else {
-                    // Otherwise, resize the rectangle (drawing mode)
-                    selectionRect.x = Math.min(event.x, startX); // returns smaller number as an x
-                    selectionRect.y = Math.min(event.y, startY); // returns smaller number as an y
-
-                    // Calculate the width and height of the rectangle
+                    selectionRect.x = Math.min(event.x, startX);
+                    selectionRect.y = Math.min(event.y, startY);
                     selectionRect.width = Math.abs(event.x - startX);
                     selectionRect.height = Math.abs(event.y - startY);
                 }
             }
 
             onReleased: function(event) {
-                // Log the final state of the rectangle when released
                 console.log("Final rectangle: x=" + selectionRect.x +
                     ", y=" + selectionRect.y +
                     ", width=" + selectionRect.width +
@@ -119,8 +105,7 @@ Window {
             MouseArea {
                 anchors.fill: parent
                 onClicked: {
-                    // Calling function to take screenshot
-                    screenshotHandler.takeScreenshot(selectionRect.x, selectionRect.y, selectionRect.width, selectionRect.height)
+                    screenshotHandler.takeScreenshot(selectionRect.x, selectionRect.y, selectionRect.width, selectionRect.height);
                 }
             }
         }
